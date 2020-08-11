@@ -1,50 +1,24 @@
 package com.example.movieapp.single_movie_details
 
-import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.movieapp.data.api.TheMovieDBInterface
+import androidx.lifecycle.ViewModel
 import com.example.movieapp.data.repository.NetworkState
 import com.example.movieapp.data.vo.MovieDetails
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 
-class SingleMovieViewModel(private val apiService : TheMovieDBInterface, private val compositeDisposable: CompositeDisposable) {
-    private val _networkState  = MutableLiveData<NetworkState>()
-    val networkState: LiveData<NetworkState>
-        get() = _networkState                   //with this get, no need to implement get function to get networkSate
+class SingleMovieViewModel(private val movieRepository : MovieDetailsRepository, movieId: Int)  : ViewModel() {
+    private val compositeDisposable = CompositeDisposable()
 
-    private val _downloadedMovieDetailsResponse =  MutableLiveData<MovieDetails>()
-    val downloadedMovieResponse: LiveData<MovieDetails>
-        get() = _downloadedMovieDetailsResponse
+    val  movieDetails : LiveData<MovieDetails> by lazy {
+        movieRepository.fetchSingleMovieDetails(compositeDisposable,movieId)
+    }
 
-    fun fetchMovieDetails(movieId: Int) {
+    val networkState : LiveData<NetworkState> by lazy {
+        movieRepository.getMovieDetailsNetworkState()
+    }
 
-        _networkState.postValue(NetworkState.LOADING)
-
-
-        try {
-            compositeDisposable.add(
-                apiService.getMovieDetails(movieId)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                        {
-                            _downloadedMovieDetailsResponse.postValue(it)
-                            _networkState.postValue(NetworkState.LOADED)
-                        },
-                        {
-                            _networkState.postValue(NetworkState.ERROR)
-                            Log.e("MovieDetailsDataSource", it.message)
-                        }
-                    )
-            )
-
-        }
-
-        catch (e: Exception){
-            Log.e("MovieDetailsDataSource",e.message)
-        }
-
-
+    override fun onCleared() {
+        super.onCleared()
+        compositeDisposable.dispose()
     }
 }
