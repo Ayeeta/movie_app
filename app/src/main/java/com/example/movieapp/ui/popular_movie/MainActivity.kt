@@ -1,4 +1,4 @@
-package com.example.movieapp.ui
+package com.example.movieapp.ui.popular_movie
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
